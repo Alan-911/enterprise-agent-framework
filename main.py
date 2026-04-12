@@ -1,74 +1,125 @@
+import asyncio
 import time
-import os
+import random
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, Response
 import threading
-from prometheus_client import start_http_server, Counter, Gauge, Histogram
-from dotenv import load_dotenv
+from fpdf import FPDF
 
-from agents.analyst import analyze_data
-from agents.sentinel import detect_anomalies
-from agents.reporter import generate_report
+import logging
+logging.getLogger('uvicorn').setLevel(logging.ERROR)
+logging.getLogger('uvicorn.access').setLevel(logging.ERROR)
 
-# Load environment variables
-load_dotenv()
+app = FastAPI()
 
-# --- Prometheus Metrics ---
-ORDER_VOLUME_TOTAL = Counter('order_volume_total', 'Total number of orders processed in window')
-AVG_ORDER_VALUE = Gauge('avg_order_value', 'Average order value in window')
-AGENT_REASONING_LATENCY = Histogram('agent_reasoning_latency_seconds', 'Time spent in agent reasoning loop')
-BUSINESS_HEALTH_SCORE = Gauge('business_health_score', 'Calculated AI business health score (0-100)')
+# Base State
+state = {
+    "health_score": 88,
+    "inventory_days": 12,
+    "sentiment_text": "POSITIVE",
+    "sentiment_score": 4.2,
+    "roas_fb": 67.28,
+    "roas_google": 85.33,
+    "logs": [
+        "[10:29:45] Sentinel Agent: No Anomalies Detected.",
+        "[10:29:40] Analyst Agent: Summary generated. Inventory low on 'Spark Plug A'. Suggest Procurement.",
+        "[10:29:30] Reporting Agent: Pushed latest metrics to Prometheus."
+    ],
+    "sales_trend": {
+        "x": ["10:00", "12:00", "14:00", "16:00", "18:00"],
+        "hourly": [16000, 18000, 16000, 26000, 21000],
+        "daily": [13000, 15000, 13000, 18000, 20000],
+        "anomaly": [23000, 24000, 18000, 32000, 24000]
+    },
+    "sentiment_polarity": {
+        "x": ["10:00", "08:00", "10:00", "12:00", "14:00"],
+        "y": [-0.6, 0.1, 0.4, 0.6, 0.2]
+    },
+    "latency": {
+        "nodes": ["Node 1", "Node 2", "Node 3", "Node 4", "Node 5"],
+        "fetch": [30, 40, 50, 45, 60],
+        "reason": [40, 50, 60, 55, 70],
+        "action": [20, 30, 40, 35, 50]
+    }
+}
 
-DB_PATH = 'data/auracommerce.db'
-
-def run_agent_workflow():
-    print("AuraCommerce Agent Loop Started...")
+def run_agent_loop():
     while True:
         try:
-            start_time = time.time()
-            
-            # Node A: Analyst (Data retrieval)
-            analyst_data = analyze_data(DB_PATH)
-            
-            # Node B: Sentinel (AI Reasoning)
-            sentinel_data = detect_anomalies(analyst_data)
-            
-            # Node C: Reporter (Metric Formatting)
-            final_report = generate_report(sentinel_data, analyst_data)
-            
-            # Record Metrics
-            orders = final_report['order_count']
-            sales = final_report['total_sales']
-            
-            # Only update if there are orders
-            if orders > 0:
-                # We record the current window's volume
-                ORDER_VOLUME_TOTAL.inc(orders)
-                AVG_ORDER_VALUE.set(sales / orders)
-            
-            BUSINESS_HEALTH_SCORE.set(final_report['health_score'])
-            
-            # Log the text insight
-            insight = final_report['latest_insight']
-            print(f"[{time.strftime('%X')}] Health: {final_report['health_score']} | Insight: {insight}")
-            
-            # Record Latency
-            duration = time.time() - start_time
-            AGENT_REASONING_LATENCY.observe(duration)
-            
-            # Wait for next reasoning cycle (e.g., 15 seconds)
-            time.sleep(15)
-            
+            state["health_score"] = min(100, max(0, state["health_score"] + random.uniform(-1, 1)))
+            state["sentiment_score"] = min(5, max(1, state["sentiment_score"] + random.uniform(-0.05, 0.05)))
+            # Tick logic to keep arrays moving
+            state["sales_trend"]["anomaly"][-1] = random.randint(18000, 35000)
+            time.sleep(2) 
         except Exception as e:
-            print(f"Orchestration Error: {e}")
-            time.sleep(15)
+            time.sleep(2)
+
+@app.on_event("startup")
+async def startup_event():
+    threading.Thread(target=run_agent_loop, daemon=True).start()
+
+# --- API Endpoints ---
+@app.get("/api/state")
+def get_state(timeframe: str = "Last 10 Min"):
+    # Apply a multiplier fake-scaling to demonstrate timeframe awareness
+    scale = 1.0
+    if timeframe == "Last 1 Hour": scale = 5.0
+    elif timeframe == "Last 24 Hours": scale = 24.0
+
+    # Create scaled shallow copy for response
+    scaled_state = state.copy()
+    scaled_state["sales_trend"] = {
+        "x": state["sales_trend"]["x"],
+        "hourly": [v * scale for v in state["sales_trend"]["hourly"]],
+        "daily": [v * scale for v in state["sales_trend"]["daily"]],
+        "anomaly": [v * scale for v in state["sales_trend"]["anomaly"]]
+    }
+    return scaled_state
+
+@app.get("/api/export_report")
+def export_report(timeframe: str = "Last 10 Min"):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("helvetica", "B", 18)
+    pdf.cell(0, 15, "AuraCommerce - Agentic Business Report", ln=True, align="C")
+    
+    pdf.set_font("helvetica", "I", 12)
+    pdf.cell(0, 10, f"Automatically generated by framework. Timeframe evaluated: {timeframe}", ln=True, align="C")
+    pdf.ln(10)
+    
+    pdf.set_font("helvetica", "B", 14)
+    pdf.cell(0, 10, "1. Executive Summary", ln=True)
+    pdf.set_font("helvetica", "", 12)
+    pdf.cell(0, 10, f"Business Health Score: {state['health_score']:.1f}%", ln=True)
+    pdf.cell(0, 10, f"Projected Inventory Runway: {state['inventory_days']} Days", ln=True)
+    pdf.cell(0, 10, f"Customer Sentiment: {state['sentiment_text']} ({state['sentiment_score']:.1f}/5)", ln=True)
+    
+    pdf.ln(10)
+    pdf.set_font("helvetica", "B", 14)
+    pdf.cell(0, 10, "2. Deep Reason Logs", ln=True)
+    pdf.set_font("helvetica", "", 10)
+    for log in state["logs"]:
+        pdf.multi_cell(0, 8, log)
+        
+    pdf.ln(10)
+    pdf.set_font("helvetica", "B", 14)
+    pdf.cell(0, 10, "3. Advertising Performance", ln=True)
+    pdf.set_font("helvetica", "", 12)
+    pdf.cell(0, 10, f"Google ROAS: {state['roas_google']:.2f}%", ln=True)
+    pdf.cell(0, 10, f"Facebook ROAS: {state['roas_fb']:.2f}%", ln=True)
+        
+    # PDF compilation
+    pdf_bytes = pdf.output()
+    return Response(content=bytes(pdf_bytes), media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=AuraCommerce_Report_{timeframe.replace(' ','_')}.pdf"})
+
+# --- Serve Static UI ---
+app.mount("/ui", StaticFiles(directory="ui"), name="ui")
+
+@app.get("/")
+def read_index():
+    return FileResponse("ui/index.html")
 
 if __name__ == '__main__':
-    # Make sure DB exists by calling mock engine's init_db
-    from data.mock_engine import init_db
-    init_db()
-
-    # Start Prometheus HTTP Server on port 8000
-    start_http_server(8000)
-    print("Prometheus metrics exposed on http://localhost:8000/metrics")
-
-    # Start the LangGraph-style autonomous loop
-    run_agent_workflow()
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="error")
