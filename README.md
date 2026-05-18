@@ -41,126 +41,69 @@ Most AI agents are prototypes. EAF is built to be a resilient, scalable system t
 }}%%
 flowchart TD
 
-    classDef p1agent fill:#14A800,stroke:#108A00,color:#FFF,stroke-width:2px
-    classDef p2agent fill:#3C8224,stroke:#2E6B1B,color:#FFF,stroke-width:2px
-    classDef p3agent fill:#E1F0DA,stroke:#3C8224,color:#001E00,stroke-width:2px
+    classDef core fill:#14A800,stroke:#108A00,color:#FFF,stroke-width:2px
+    classDef agent fill:#3C8224,stroke:#2E6B1B,color:#FFF,stroke-width:2px
+    classDef memory fill:#E1F0DA,stroke:#3C8224,color:#001E00,stroke-width:2px
     classDef orchestrator fill:#001E00,stroke:#14A800,color:#FFF,stroke-width:3px
-    classDef humangate fill:#F2F7F2,stroke:#3C8224,color:#001E00,stroke-width:2px
-    classDef memnode fill:#C8E6BE,stroke:#3C8224,color:#001E00,stroke-width:2px
     classDef external fill:#FFFFFF,stroke:#14A800,color:#001E00,stroke-width:2px
-    classDef success fill:#D1FAE5,stroke:#14A800,color:#001E00,stroke-width:2px
-    classDef decision fill:#3C8224,stroke:#2E6B1B,color:#FFF,stroke-width:2px
 
-    EXT[/"Upwork · LinkedIn · Fiverr · Outlier"/]
-    ORCH(["ORCHESTRATOR\n17-State Machine"])
+    EXT[/"Enterprise Data Sources\n(APIs, DBs, Documents)"/]
+    ORCH(["ORCHESTRATOR\nDynamic State Router"])
 
-    subgraph P1["PHASE 1 · ACQUISITION"]
+    subgraph INTAKE["PHASE 1 · DATA INGESTION & TRIAGE"]
         direction TB
-        CH["Agent 1\nContract Hunter"]
-        BE["Agent 2\nBid Evaluator"]
-        ABD{"Auto-Bid\nPolicy"}
-        HG1(["Human Gate 1\nBid Approval"])
-        BD["Agent 3\nBidder"]
+        DA["Agent 1\nData Analyzer"]
+        IC["Agent 2\nIntent Classifier"]
     end
 
-    subgraph P2["PHASE 2 · SOLUTION DESIGN"]
+    subgraph LOGIC["PHASE 2 · REASONING & EXECUTION"]
         direction TB
-        IMP["Agent 4\nImplementer"]
-        VA(["Agent 5\nView Agent\n............@cons.org"])
-        APD{"Approval\nDecision"}
+        SA["Agent 3\nSemantic Searcher"]
+        CA["Agent 4\nCode/Task Executor"]
+        VA(["Human-in-the-loop\nApproval Gate"])
     end
 
-    subgraph P3["PHASE 3 · DELIVERY EXECUTION"]
+    subgraph OUTPUT["PHASE 3 · DELIVERY & SYNTHESIS"]
         direction TB
-        TW["Agent 6\nTicket Writer"]
-        CA["Agent 7\nCoding Agent"]
-        CR["Agent 8\nCode Reviewer"]
-        QA["Agent 9\nQA Agent"]
-        DEL[/"Client Delivery"/]
+        QA["Agent 5\nQA & Validation"]
+        SYN["Agent 6\nResponse Synthesizer"]
+        DEL[/"Client / End-User Application"/]
     end
 
-    subgraph ML["MEMORY AND LEARNING"]
+    subgraph MEMORY["MEMORY & RAG STACK"]
         direction LR
-        VDB[("Vector DB\nPinecone")]
-        WLA["Win/Loss\nAnalytics"]
-        NWB["Next Work\nBriefing"]
+        VDB[("Vector DB\nPinecone / Milvus")]
+        LTM["Long-Term\nInteraction Memory"]
     end
 
-    EXT --> CH
-    CH --> BE
-    BE --> ABD
-    ABD -->|"Good Range\nAuto-Bid"| BD
-    ABD -->|"High Value\nNeeds Review"| HG1
-    HG1 -->|"Approved"| BD
-    HG1 -->|"Rejected"| WLA
-    BD -->|"Bid Submitted"| ORCH
+    EXT --> DA
+    DA --> IC
+    IC -->|"Task Definition"| ORCH
 
-    ORCH -->|"Contract Won"| IMP
+    ORCH -->|"Retrieval Required"| SA
+    ORCH -->|"Execution Required"| CA
+    
+    SA <--> VDB
+    CA <--> LTM
 
-    IMP --> VA
-    VA --> APD
-    APD -->|"Approve"| TW
-    APD -->|"Revise"| IMP
-    APD -->|"Reject"| WLA
+    CA -->|"High-Risk Action"| VA
+    VA -->|"Approved"| QA
+    SA --> QA
 
-    TW --> CA
-    CA --> CR
-    CR -->|"Pass"| QA
-    CR -->|"Fail"| CA
-    QA -->|"Pass"| DEL
-    QA -->|"Fail"| CA
-    DEL --> WLA
-
-    WLA --> VDB
-    VDB --> NWB
-    NWB -->|"95-100% Match\nNext Opportunity"| CH
-    VDB -.->|"RAG Context"| IMP
-    VDB -.->|"Proposal History"| BD
-    VDB -.->|"Win Patterns"| BE
-    ORCH -.->|"State Sync"| VDB
-
-    class CH,BE,BD p1agent
-    class IMP p2agent
-    class VA,HG1 humangate
-    class TW,CA,CR,QA p3agent
-    class DEL success
-    class ORCH orchestrator
-    class VDB,WLA,NWB memnode
-    class EXT external
-    class ABD,APD decision
+    QA --> SYN
+    SYN --> DEL
 ```
 
----
+## 🚀 Proposal: Building AI-Augmented Applications
 
-## 📁 Repository Structure
-```text
-enterprise-agent-framework/
-├── agents/             # specialized agent definitions (LangGraph)
-├── memory/             # redis/postgres persistent storage logic
-├── tools/              # external API tool handlers
-├── rag/                # indexing and retrieval pipelines
-├── api/                # FastAPI routes and middleware
-└── ui/                 # Next.js admin dashboard
-```
+The traditional approach to software relies on static APIs and rigid conditional logic. This framework serves as a strategic proposal and architectural foundation for the next generation of **AI-Augmented Enterprise Applications**. 
 
----
+By transitioning to an agentic architecture, businesses can:
+1. **Reduce Overhead**: Automate complex, multi-step reasoning tasks that traditionally require human intervention.
+2. **Increase Accuracy**: Utilize specialized agent roles (e.g., Semantic Searchers, Code Executors, QA Validation) to cross-check outputs before delivery.
+3. **Maintain Safety**: Integrate strict Human-in-the-Loop (HITL) approval gates for high-risk operations while allowing autonomous execution for low-risk tasks.
 
-## 🛠️ Tech Stack
-- **Frameworks**: LangGraph, LangChain, FastAPI
-- **Intelligence**: Claude 3.5 Sonnet / GPT-4o
-- **Database**: PostgreSQL (State/Memory), Pinecone (Vector)
-- **Deployment**: Docker, Kubernetes, GitHub Actions
-
----
-
-## 🚀 Quick Start
-```bash
-git clone https://github.com/Alan-911/enterprise-agent-framework.git
-pip install -r requirements.txt
-python main.py
-```
-
----
-
-*Developed by Yves Alain Iragena*  
-[Portfolio](https://Alan-911.github.io/my-portfolio) | [LinkedIn](https://www.linkedin.com/in/yves-alain-iragena-91b44b391/)
+### Core Implementation Strategy
+- **Orchestrator Node**: Acts as the central brain, dynamically routing context between specialized agents rather than relying on linear scripts.
+- **Unified Memory Stack**: Combines Vector Databases for semantic RAG with Long-Term Memory nodes to retain conversational context across sessions.
+- **Decoupled Architecture**: Designed to be integrated directly into existing infrastructure via FastAPI, cleanly separating the AI logic from the frontend presentation.
