@@ -2,10 +2,13 @@
 
 > A 3-agent pipeline that monitors an e-commerce business in real time: an Analyst reads the database, a Sentinel detects anomalies (via OpenAI or rule-based fallback), and a Reporter formats insights for the live dashboard.
 
+**[🚀 Live Demo →](https://enterprise-agent-framework.vercel.app)**
+
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-latest-green.svg)](https://fastapi.tiangolo.com)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-orange.svg)](https://openai.com)
 [![Prometheus](https://img.shields.io/badge/Prometheus-monitoring-e6522c.svg)](https://prometheus.io)
+[![Live Demo](https://img.shields.io/badge/Demo-Live-22c55e.svg)](https://enterprise-agent-framework.vercel.app)
 
 ---
 
