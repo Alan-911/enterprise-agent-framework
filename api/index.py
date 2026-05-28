@@ -104,8 +104,8 @@ def root():
 
 @app.get("/{path:path}")
 def static_files(path: str):
-    p = os.path.join(BASE_DIR, "ui", path)
-    if os.path.exists(p):
+    p = os.path.realpath(os.path.join(BASE_DIR, path))
+    if p.startswith(os.path.realpath(BASE_DIR)) and os.path.exists(p):
         return FileResponse(p)
     return HTMLResponse("Not found", status_code=404)
 
