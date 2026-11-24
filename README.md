@@ -4,6 +4,12 @@
 
 [Dashboard demo](https://enterprise-agent-framework.vercel.app) · [Analyst](agents/analyst.py) · [Sentinel](agents/sentinel.py) · [Reporter](agents/reporter.py)
 
+## Prototype overview
+
+![AuraCommerce analysis modules and demonstration dashboard](docs/images/project-overview.svg)
+
+*Conceptual overview. The individual agent modules are not yet connected to the simulated hosted dashboard.*
+
 ## Overview
 
 AuraCommerce explores an e-commerce monitoring workflow for automotive parts sales: collect sales metrics, detect business anomalies, summarize findings and present operational information in a dashboard.
