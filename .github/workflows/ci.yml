@@ -23,6 +23,10 @@ jobs:
         run: node --check ui/app.js
       - name: Validate deployment config
         run: python -m json.tool vercel.json > /dev/null
+      - name: Install hosted API and test dependencies
+        run: python -m pip install -r requirements.txt pytest httpx
+      - name: Verify hosted API routes and file boundaries
+        run: python -m pytest tests -q
       - name: Confirm agent and hosted API implementations exist
         run: |
           test -f agents/analyst.py
