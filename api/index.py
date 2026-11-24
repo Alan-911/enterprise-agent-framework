@@ -102,12 +102,19 @@ def root():
     return HTMLResponse("<h1>AuraCommerce</h1>")
 
 
-@app.get("/{path:path}")
-def static_files(path: str):
-    p = os.path.realpath(os.path.join(BASE_DIR, path))
-    if p.startswith(os.path.realpath(BASE_DIR)) and os.path.exists(p):
-        return FileResponse(p)
-    return HTMLResponse("Not found", status_code=404)
+# Only the assets referenced by ui/index.html are publicly served.
+# Never serve data/, .env files, reports, resumes, or arbitrary repository paths.
+PUBLIC_UI_ASSETS = {"style.css", "app.js", "avatar.png"}
+
+@app.get("/ui/{asset_name}")
+def static_files(asset_name: str):
+    if asset_name not in PUBLIC_UI_ASSETS:
+        return HTMLResponse("Not found", status_code=404)
+    ui_dir = os.path.realpath(os.path.join(BASE_DIR, "ui"))
+    asset_path = os.path.realpath(os.path.join(ui_dir, asset_name))
+    if os.path.dirname(asset_path) != ui_dir or not os.path.isfile(asset_path):
+        return HTMLResponse("Not found", status_code=404)
+    return FileResponse(asset_path)
 
 
 handler = Mangum(app, lifespan="off")
