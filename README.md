@@ -1,5 +1,7 @@
 # AuraCommerce — AI-Assisted Business Intelligence Prototype
 
+[![CI](https://github.com/Alan-911/enterprise-agent-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/Alan-911/enterprise-agent-framework/actions/workflows/ci.yml) [![Security](https://github.com/Alan-911/enterprise-agent-framework/actions/workflows/security.yml/badge.svg)](https://github.com/Alan-911/enterprise-agent-framework/actions/workflows/security.yml)
+
 **E-commerce analytics · FastAPI · Python · SQLite · Plotly.js · Optional LLM analysis**
 
 [Dashboard demo](https://enterprise-agent-framework.vercel.app) · [Analyst](agents/analyst.py) · [Sentinel](agents/sentinel.py) · [Reporter](agents/reporter.py)
@@ -94,3 +96,11 @@ vercel.json         Hosted routing configuration
 **Prototype / integration in progress.** Not yet a production multi-agent orchestration framework, and no LangGraph, Kubernetes or pluggable vector database implementation is demonstrated in this codebase.
 
 **Maintainer:** Yves Alain Iragena · [Portfolio](https://alan-911.github.io/my-portfolio/)
+
+
+## Repository quality and security
+
+- [Continuous integration](.github/workflows/ci.yml), [CodeQL and secret scanning](.github/workflows/security.yml).
+- [Security reporting policy](SECURITY.md) and [contribution guidelines](CONTRIBUTING.md).
+- CI includes regression tests for the hosted UI asset allowlist; the multi-agent execution pipeline is still not integrated. See [engineering status](docs/engineering-status.md).
+- Licensing for reuse should be confirmed with the project owner; no new license is granted by these workflow updates.
