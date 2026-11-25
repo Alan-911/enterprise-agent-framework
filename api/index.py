@@ -102,12 +102,21 @@ def root():
     return HTMLResponse("<h1>AuraCommerce</h1>")
 
 
-@app.get("/{path:path}")
-def static_files(path: str):
-    p = os.path.realpath(os.path.join(BASE_DIR, path))
-    if p.startswith(os.path.realpath(BASE_DIR)) and os.path.exists(p):
-        return FileResponse(p)
-    return HTMLResponse("Not found", status_code=404)
+# Only the three static assets referenced by ui/index.html are public.
+# Paths are fixed constants; untrusted URL segments never reach FileResponse.
+@app.get("/ui/style.css")
+def ui_style():
+    return FileResponse(os.path.join(BASE_DIR, "ui", "style.css"))
+
+
+@app.get("/ui/app.js")
+def ui_script():
+    return FileResponse(os.path.join(BASE_DIR, "ui", "app.js"))
+
+
+@app.get("/ui/avatar.png")
+def ui_avatar():
+    return FileResponse(os.path.join(BASE_DIR, "ui", "avatar.png"))
 
 
 handler = Mangum(app, lifespan="off")

@@ -1,0 +1,35 @@
+name: CI — Prototype checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  source-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Compile Python modules
+        run: python -m compileall -q main.py api agents data setup_dashboard.py dashboard.py
+      - name: Check browser JavaScript syntax
+        run: node --check ui/app.js
+      - name: Validate deployment config
+        run: python -m json.tool vercel.json > /dev/null
+      - name: Install hosted API and test dependencies
+        run: python -m pip install -r requirements.txt pytest httpx
+      - name: Verify hosted API routes and file boundaries
+        run: python -m pytest tests -q
+      - name: Confirm agent and hosted API implementations exist
+        run: |
+          test -f agents/analyst.py
+          test -f agents/sentinel.py
+          test -f agents/reporter.py
+          test -f api/index.py
